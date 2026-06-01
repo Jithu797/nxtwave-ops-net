@@ -1,0 +1,125 @@
+@page
+@model LMSDashboard.Pages.ReportsModel
+@{
+    ViewData["Title"] = "Reports";
+    ViewData["ActivePage"] = "Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Monthly Report</h2>
+    <a href="/api/reports/monthly/export" class="btn btn-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>Export to Excel
+    </a>
+</div>
+
+@if (Model.Report != null)
+{
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-primary">@Model.Report.TotalItemsThisMonth</div>
+                    <div class="text-muted small">Total Items Loaded</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-danger">@Model.Report.ErrorRatePercent%</div>
+                    <div class="text-muted small">Error Rate</div>
+                </div>
+            </div>
+        </div>
+        @if (Model.Report.PeakDay != null)
+        {
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold text-success">@Model.Report.PeakDay.Count</div>
+                        <div class="text-muted small">Peak Day (@Model.Report.PeakDay.Date.ToString("MMM d"))</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Daily Bar Chart -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent fw-semibold">Items Loaded Per Day</div>
+        <div class="card-body">
+            <canvas id="dailyChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <!-- Breakdown Tables -->
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent fw-semibold">By Status</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        @foreach (var kv in Model.Report.ByStatus)
+                        {
+                            <tr>
+                                <td>@kv.Key</td>
+                                <td class="text-end fw-semibold">@kv.Value</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent fw-semibold">By Track</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        @foreach (var kv in Model.Report.ByTrack)
+                        {
+                            <tr>
+                                <td>@kv.Key</td>
+                                <td class="text-end fw-semibold">@kv.Value</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent fw-semibold">By Type</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        @foreach (var kv in Model.Report.ByType)
+                        {
+                            <tr>
+                                <td>@kv.Key</td>
+                                <td class="text-end fw-semibold">@kv.Value</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    const dailyLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.Report?.DailyCounts.Select(d => d.Date.ToString("MMM d")) ?? new List<string>()));
+    const dailyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.Report?.DailyCounts.Select(d => d.Count) ?? new List<int>()));
+
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: {
+            labels: dailyLabels,
+            datasets: [{ label: 'Items', data: dailyData, backgroundColor: '#0d6efd' }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+}

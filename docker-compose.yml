@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "LMS_Dev_Password_123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=LMSDashboard;User Id=sa;Password=LMS_Dev_Password_123!;TrustServerCertificate=True;
+      - Jwt__Secret=DOCKER_JWT_SECRET_REPLACE_IN_PRODUCTION_32CHARS
+      - Jwt__Issuer=LMSDashboard
+      - Jwt__Audience=LMSDashboard
+      - Auth__DevUsername=admin
+      - Auth__DevPassword=admin123
+
+volumes:
+  sqldata:

@@ -1,0 +1,107 @@
+@page
+@model LMSDashboard.Pages.UploadModel
+@{
+    ViewData["Title"] = "Upload";
+    ViewData["ActivePage"] = "Upload";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-upload me-2 text-primary"></i>Upload Content Items</h2>
+    <a href="/api/template/download" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-file-earmark-arrow-down me-1"></i>Download Template
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Upload Excel File</h5>
+                <p class="text-muted small mb-3">
+                    Upload a <code>.xlsx</code> file with columns:
+                    <strong>Title</strong>, <strong>Type</strong>, <strong>Track</strong>,
+                    <strong>Difficulty</strong>, and optionally <strong>Notes</strong>.
+                </p>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label fw-semibold">Choose Excel File</label>
+                        <input type="file" id="file" name="file" class="form-control"
+                               accept=".xlsx" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload me-1"></i>Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body">
+                <h6 class="fw-semibold">Valid Values Reference</h6>
+                <div class="row g-2 mt-1">
+                    <div class="col-6">
+                        <div class="text-muted small fw-semibold">Type</div>
+                        @foreach (var t in Enum.GetNames<ContentType>())
+                        {
+                            <div><span class="badge bg-secondary me-1">@t</span></div>
+                        }
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted small fw-semibold">Track</div>
+                        @foreach (var t in Enum.GetNames<Track>())
+                        {
+                            <div><span class="badge bg-primary me-1">@t</span></div>
+                        }
+                    </div>
+                    <div class="col-6 mt-2">
+                        <div class="text-muted small fw-semibold">Difficulty</div>
+                        @foreach (var d in Enum.GetNames<Difficulty>())
+                        {
+                            <div><span class="badge bg-info text-dark me-1">@d</span></div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Summary != null)
+    {
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm @(Model.Summary.Failed == 0 ? "border-success" : "")">
+                <div class="card-header bg-transparent fw-semibold">Upload Result</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <div class="border rounded p-3 text-center">
+                                <div class="fs-2 fw-bold text-success">@Model.Summary.Created</div>
+                                <div class="text-muted small">Created</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-3 text-center">
+                                <div class="fs-2 fw-bold text-danger">@Model.Summary.Failed</div>
+                                <div class="text-muted small">Failed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.Summary.Errors.Any())
+                    {
+                        <h6 class="text-danger">Errors:</h6>
+                        <ul class="small text-danger list-unstyled">
+                            @foreach (var e in Model.Summary.Errors)
+                            {
+                                <li><i class="bi bi-exclamation-triangle me-1"></i>@e</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-success"><i class="bi bi-check-circle me-1"></i>All rows processed successfully!</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

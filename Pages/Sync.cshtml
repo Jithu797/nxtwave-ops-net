@@ -1,0 +1,67 @@
+@page
+@model LMSDashboard.Pages.SyncModel
+@{
+    ViewData["Title"] = "Sync";
+    ViewData["ActivePage"] = "Sync";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-arrow-repeat me-2 text-primary"></i>Google Sheets Sync</h2>
+    <form method="post">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i>Sync Now
+        </button>
+    </form>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.SyncMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-1"></i>@Model.SyncMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model.LastSync != null)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-clock me-1"></i>Last sync: <strong>@Model.LastSync.Value.ToString("MMM d, yyyy HH:mm:ss") UTC</strong>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent fw-semibold">Recent Sync Activity</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sheet Name</th>
+                        <th>Rows Updated</th>
+                        <th>Status</th>
+                        <th>Synced At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.RecentLogs.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-3">No sync history yet.</td></tr>
+                    }
+                    @foreach (var log in Model.RecentLogs)
+                    {
+                        <tr>
+                            <td>@log.SheetName</td>
+                            <td>@log.RowsUpdated</td>
+                            <td>
+                                <span class="badge @(log.Status == "Success" ? "bg-success" : "bg-warning text-dark")">
+                                    @log.Status
+                                </span>
+                            </td>
+                            <td class="text-muted small">@log.SyncedAt.ToString("MMM d HH:mm:ss")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,171 @@
+@page
+@model LMSDashboard.Pages.ContentPageModel
+@{
+    ViewData["Title"] = "Content";
+    ViewData["ActivePage"] = "Content";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-table me-2 text-primary"></i>Content Items</h2>
+    <a href="/Upload" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload Excel</a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in Enum.GetNames<ContentStatus>())
+                    {
+                        <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Track</label>
+                <select name="track" class="form-select form-select-sm">
+                    <option value="">All Tracks</option>
+                    @foreach (var t in Enum.GetNames<Track>())
+                    {
+                        <option value="@t" selected="@(Model.TrackFilter == t)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Type</label>
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    @foreach (var t in Enum.GetNames<ContentType>())
+                    {
+                        <option value="@t" selected="@(Model.TypeFilter == t)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-funnel me-1"></i>Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success alert-dismissible fade show">@Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">@Model.TotalCount items found</span>
+        <span class="text-muted small">Page @Model.CurrentPage of @Model.TotalPages</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th><th>Type</th><th>Track</th><th>Difficulty</th>
+                        <th>Status</th><th>Created</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="fw-medium">@item.Title</td>
+                            <td><span class="badge bg-secondary">@item.Type</span></td>
+                            <td>@item.Track</td>
+                            <td>@item.Difficulty</td>
+                            <td><span class="badge @StatusBadge(item.Status)">@item.Status</span></td>
+                            <td class="text-muted small">@item.CreatedAt.ToString("MMM d, yyyy")</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/Content/View/@item.Id" class="btn btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <form method="post" asp-page-handler="Validate" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <i class="bi bi-check2-circle"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-outline-primary"
+                                            data-bs-toggle="modal" data-bs-target="#statusModal"
+                                            data-id="@item.Id" data-status="@item.Status">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Pagination -->
+    <div class="card-footer bg-transparent">
+        <nav>
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="?page=@p&status=@Model.StatusFilter&track=@Model.TrackFilter&type=@Model.TypeFilter">@p</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Status Update Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="UpdateStatus">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="modalItemId" />
+                    <select name="newStatus" class="form-select">
+                        @foreach (var s in Enum.GetNames<ContentStatus>())
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string StatusBadge(string status) => status switch
+    {
+        "Pending" => "bg-secondary",
+        "InBeta" => "bg-warning text-dark",
+        "Validated" => "bg-info text-dark",
+        "InProduction" => "bg-success",
+        "Failed" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+@section Scripts {
+<script>
+    document.getElementById('statusModal').addEventListener('show.bs.modal', function(e) {
+        document.getElementById('modalItemId').value = e.relatedTarget.dataset.id;
+    });
+</script>
+}
