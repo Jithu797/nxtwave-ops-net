@@ -8,6 +8,7 @@
     <AssemblyName>LMSDashboard</AssemblyName>
     <UserSecretsId>lms-dashboard-dev</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
